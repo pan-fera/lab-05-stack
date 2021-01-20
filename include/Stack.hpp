@@ -20,7 +20,7 @@ class Stack
   Stack():_head(nullptr){};
   explicit Stack(const Stack& stack) = delete;
   Stack(Stack&& stack) = default;
-  auto operator=(Stack&& stack) -> Stack& = default; // assignable move
+  auto operator=(Stack&& stack) -> Stack& = default;
   [[maybe_unused]] void push(T&& value);
   [[maybe_unused]] void push(const T& value);
   [[maybe_unused]] void pop();
@@ -36,8 +36,6 @@ void Stack<T>::push(T&& value) {
   if ( _head )
     _head->next = object;
   _head = object;
-
-  std::cout << "T&&" << object->data<<std::endl;
 }
 template <typename T>
 void Stack<T>::push(const T& value) {
@@ -46,18 +44,20 @@ void Stack<T>::push(const T& value) {
   if ( _head )
     _head->next = object;
   _head = object;
-  std::cout << "T&" << object->data <<std::endl;
 }
 template <typename T>
 void Stack<T>::pop() {
   if (_head){
-    _head = _head->prev;
-    delete[] _head->next;
-    _head->next = nullptr;
+    Element<T> *_head1 = _head->prev;
+    delete[] _head;
+    _head = _head1;
+    if (_head) _head->next = nullptr;
   }else {
-    throw std::exception();
+    throw std::runtime_error("Empty stack");
   }
 }
 template <typename T>
-const T& Stack<T>::head() const { return _head->data; }
+const T& Stack<T>::head() const {
+  if (!_head) throw std::runtime_error("Empty stack");
+  return _head->data; }
 #endif  // TEMPLATE_STACK_HPP
