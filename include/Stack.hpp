@@ -25,7 +25,7 @@ class Stack
   [[maybe_unused]] void push(const T& value);
   [[maybe_unused]] void pop();
   [[maybe_unused]] const T& head() const;
-  virtual ~Stack() = default;
+  virtual ~Stack();
  private:
   Element<T> *_head;
 };
@@ -49,7 +49,7 @@ template <typename T>
 void Stack<T>::pop() {
   if (_head){
     Element<T> *_head1 = _head->prev;
-    delete[] _head;
+    delete _head;
     _head = _head1;
     if (_head) _head->next = nullptr;
   }else {
@@ -60,4 +60,12 @@ template <typename T>
 const T& Stack<T>::head() const {
   if (!_head) throw std::runtime_error("Empty stack");
   return _head->data; }
+template <typename T>
+Stack<T>::~Stack() {
+  while (_head){
+    Element<T> *_head1 = _head->prev;
+    delete _head;
+    _head = _head1;
+  }
+}
 #endif  // TEMPLATE_STACK_HPP
