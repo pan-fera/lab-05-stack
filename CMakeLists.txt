@@ -31,6 +31,7 @@ find_package(GTest CONFIG REQUIRED)
 
 add_library(${PROJECT_NAME} INTERFACE
         # enum your files and delete this comment
+
         #${CMAKE_CURRENT_SOURCE_DIR}/sources/Stack.cpp
         )
 
@@ -38,7 +39,9 @@ add_executable(demo
         ${CMAKE_CURRENT_SOURCE_DIR}/demo/main.cpp
         )
 
+
 target_include_directories(${PROJECT_NAME} INTERFACE
+        #${CMAKE_CURRENT_SOURCE_DIR}/include
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
         "$<INSTALL_INTERFACE:include>"
         )
@@ -61,6 +64,7 @@ if(BUILD_COVERAGE)
   find_package(codecov)
   add_coverage(${PROJECT_NAME})
   add_coverage(tests)
+  list(APPEND LCOV_REMOVE_PATTERNS "'${PROJECT_SOURCE_DIR}/tests/*'")
   coverage_evaluate()
 endif()
 
