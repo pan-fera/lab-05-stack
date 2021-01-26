@@ -21,6 +21,7 @@ class NoCopyableStack{
     void push(T&& value);
     const T& head() const;
     T pop();
+    ~NoCopyableStack();
  private:
   Element<T> *_head;
 };
@@ -60,4 +61,12 @@ T NoCopyableStack<T>::pop() {
   }
 }
 
+template <typename T>
+NoCopyableStack<T>::~NoCopyableStack() {
+  while (_head){
+    Element<T> *_head1 = _head->prev;
+    delete _head;
+    _head = _head1;
+  }
+}
 #endif  // TEMPLATE_NOCOPYABLESTACK_HPP
