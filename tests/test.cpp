@@ -137,6 +137,8 @@ TEST(Struct, Correct) {
 }
 
 TEST(NoCopyableStack, Push_and_pop) {
+  EXPECT_THROW(NoCopyableStack<int> a;,
+                                      std::runtime_error);
   NoCopyableStack<Struct2<int>> a;
   EXPECT_THROW(a.pop(), std::runtime_error);
   Struct2<int> test_struct1 (1, 2, 3);
