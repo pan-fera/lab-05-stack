@@ -1,6 +1,7 @@
 //
 // Created by hacker on 16.01.2021.
-//r
+//
+// Copyright 2021 hacker
 #include <cstdlib>
 #include <iostream>
 #include <type_traits>
@@ -9,9 +10,8 @@
 template <typename T>
 struct Element
 {
-  const T data;
+  T data;
   Element *prev;
-  Element *next;
 };
 template <typename T>
 class Stack
@@ -19,31 +19,23 @@ class Stack
  public:
   Stack():_head(nullptr){};
   explicit Stack(const Stack& stack) = delete;
-  Stack(Stack&& stack) = default;
-  auto operator=(Stack&& stack) -> Stack& = default;
-  [[maybe_unused]] void push(T&& value);
-  [[maybe_unused]] void push(const T& value);
-  [[maybe_unused]] void pop();
-  [[maybe_unused]] const T& head() const;
-  virtual ~Stack();
+  Stack(Stack&& stack)  noexcept = default;
+  auto operator=(Stack&& stack)  noexcept -> Stack& = default;
+  void push(T&& value);
+  void push(const T& value);
+  void pop();
+  const T& head() const;
+  ~Stack();
  private:
   Element<T> *_head;
 };
 template <typename T>
 void Stack<T>::push(T&& value) {
-  Element<T> *object = new Element<T> {value, _head, nullptr};
-
-  if ( _head )
-    _head->next = object;
-  _head = object;
+  _head = new Element<T> {value, _head};
 }
 template <typename T>
 void Stack<T>::push(const T& value) {
-  Element<T> *object = new Element<T> {value, _head, nullptr};
-
-  if ( _head )
-    _head->next = object;
-  _head = object;
+  _head = new Element<T> {value, _head};
 }
 template <typename T>
 void Stack<T>::pop() {
@@ -51,7 +43,6 @@ void Stack<T>::pop() {
     Element<T> *_head1 = _head->prev;
     delete _head;
     _head = _head1;
-    if (_head) _head->next = nullptr;
   }else {
     throw std::runtime_error("Empty stack");
   }
@@ -68,4 +59,5 @@ Stack<T>::~Stack() {
     _head = _head1;
   }
 }
+
 #endif  // TEMPLATE_STACK_HPP

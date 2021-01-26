@@ -1,7 +1,8 @@
-// Copyright 2020 Your Name <your_email>
+// Copyright 2021 hacker
 
 #include <gtest/gtest.h>
 #include <Stack.hpp>
+#include <NoCopyableStack.hpp>
 TEST(Example, EmptyTest) {
     EXPECT_TRUE(true);
 }
@@ -58,7 +59,7 @@ TEST(Stack, Push_lvalue) {
 
 TEST(Stack, Pop) {
   Stack<double> a;
-  EXPECT_THROW(a.head(), std::runtime_error);
+  EXPECT_THROW(a.pop(), std::runtime_error);
 
   double val1 = 5.7;
   double val2 = 10.3;
@@ -90,20 +91,132 @@ TEST(Stack, Is_Move) {
   EXPECT_TRUE(std::is_move_constructible<Stack<int>>::value);
   EXPECT_TRUE(std::is_move_assignable<Stack<int>>::value);
 
-  EXPECT_TRUE(std::is_move_constructible<Stack<Struct<std::string>>>::value);
-  EXPECT_TRUE(std::is_move_assignable<Stack<Struct<std::string>>>::value);
+  EXPECT_TRUE(std::is_move_constructible
+      <Stack<Struct<std::string>>>::value);
+  EXPECT_TRUE(std::is_move_assignable
+      <Stack<Struct<std::string>>>::value);
 
-  EXPECT_TRUE(std::is_move_constructible<Stack<Struct<double>>>::value);
-  EXPECT_TRUE(std::is_move_assignable<Stack<Struct<double>>>::value);
+  EXPECT_TRUE(std::is_move_constructible
+      <Stack<Struct<double>>>::value);
+  EXPECT_TRUE(std::is_move_assignable
+      <Stack<Struct<double>>>::value);
 }
 
 TEST(Stack, Is_Copy) {
   EXPECT_FALSE(std::is_copy_constructible<Stack<int>>::value);
   EXPECT_FALSE(std::is_copy_assignable<Stack<int>>::value);
 
-  EXPECT_FALSE(std::is_copy_constructible<Stack<Struct<std::string>>>::value);
-  EXPECT_FALSE(std::is_copy_assignable<Stack<Struct<std::string>>>::value);
+  EXPECT_FALSE(std::is_copy_constructible
+      <Stack<Struct<std::string>>>::value);
+  EXPECT_FALSE(std::is_copy_assignable
+      <Stack<Struct<std::string>>>::value);
 
-  EXPECT_FALSE(std::is_copy_constructible<Stack<Struct<double>>>::value);
-  EXPECT_FALSE(std::is_copy_assignable<Stack<Struct<double>>>::value);
+  EXPECT_FALSE(std::is_copy_constructible
+      <Stack<Struct<double>>>::value);
+  EXPECT_FALSE(std::is_copy_assignable
+      <Stack<Struct<double>>>::value);
+}
+
+template <typename T>
+struct Struct2
+{
+  Struct2(T d1, T d2, T d3) : data1(d1), data2(d2), data3(d3){};
+  explicit Struct2(const Struct2& stack) = delete;
+  Struct2(Struct2&& stack) noexcept = default;
+  auto operator=(Struct2&& stack) noexcept -> Struct2& = default;
+  T data1;
+  T data2;
+  T data3;
+};
+
+TEST(Struct, Correct) {
+  EXPECT_TRUE(std::is_move_constructible<Struct2<int>>::value);
+  EXPECT_TRUE(std::is_move_assignable<Struct2<int>>::value);
+  EXPECT_FALSE(std::is_copy_constructible<Struct2<int>>::value);
+  EXPECT_FALSE(std::is_copy_assignable<Struct2<int>>::value);
+}
+
+TEST(NoCopyableStack, Push_and_pop) {
+  NoCopyableStack<Struct2<int>> a;
+  EXPECT_THROW(a.pop(), std::runtime_error);
+  Struct2<int> test_struct1 (1, 2, 3);
+  Struct2<int> test_struct2 (4, 5, 6);
+  a.push(std::move(test_struct1));
+  a.push(std::move(test_struct2));
+
+  Struct2<int> test_struct3 = a.pop();
+
+  EXPECT_EQ(test_struct3.data1, test_struct2.data1);
+  EXPECT_EQ(test_struct3.data2, test_struct2.data2);
+  EXPECT_EQ(test_struct3.data3, test_struct2.data3);
+
+  test_struct3 = a.pop();
+  EXPECT_EQ(test_struct3.data1, test_struct1.data1);
+  EXPECT_EQ(test_struct3.data2, test_struct1.data2);
+  EXPECT_EQ(test_struct3.data3, test_struct1.data3);
+}
+
+TEST(NoCopyableStack, Push_emplace_and_pop) {
+  NoCopyableStack<Struct2<int>> a;
+  EXPECT_THROW(a.pop(), std::runtime_error);
+  Struct2<int> test_struct1 (1, 2, 3);
+  Struct2<int> test_struct2 (4, 5, 6);
+  a.push_emplace(1, 2, 3);
+  a.push_emplace(4, 5, 6);
+
+  Struct2<int> test_struct3 = a.pop();
+
+  EXPECT_EQ(test_struct3.data1, test_struct2.data1);
+  EXPECT_EQ(test_struct3.data2, test_struct2.data2);
+  EXPECT_EQ(test_struct3.data3, test_struct2.data3);
+
+  test_struct3 = a.pop();
+  EXPECT_EQ(test_struct3.data1, test_struct1.data1);
+  EXPECT_EQ(test_struct3.data2, test_struct1.data2);
+  EXPECT_EQ(test_struct3.data3, test_struct1.data3);
+}
+
+TEST(NoCopyableStack, Head) {
+  NoCopyableStack<Struct2<int>> a;
+  EXPECT_THROW(a.head(), std::runtime_error);
+  Struct2<int> test_struct1 (1, 2, 3);
+  Struct2<int> test_struct2 (4, 5, 6);
+  a.push_emplace(1, 2, 3);
+  a.push_emplace(4, 5, 6);
+
+  const Struct2<int>& test_struct3 = a.head();
+
+  EXPECT_EQ(test_struct3.data1, test_struct2.data1);
+  EXPECT_EQ(test_struct3.data2, test_struct2.data2);
+  EXPECT_EQ(test_struct3.data3, test_struct2.data3);
+
+  a.pop();
+  const Struct2<int>& test_struct4 = a.head();
+  EXPECT_EQ(test_struct4.data1, test_struct1.data1);
+  EXPECT_EQ(test_struct4.data2, test_struct1.data2);
+  EXPECT_EQ(test_struct4.data3, test_struct1.data3);
+}
+
+TEST(NoCopyableStack, Is_Move) {
+  EXPECT_TRUE(std::is_move_constructible
+      <NoCopyableStack<Struct2<std::string>>>::value);
+  EXPECT_TRUE(std::is_move_assignable
+      <NoCopyableStack<Struct2<std::string>>>::value);
+
+  EXPECT_TRUE(std::is_move_constructible
+      <NoCopyableStack<Struct2<double>>>::value);
+  EXPECT_TRUE(std::is_move_assignable
+      <NoCopyableStack<Struct2<double>>>::value);
+}
+
+TEST(NoCopyableStack, Is_Copy) {
+  EXPECT_FALSE(std::is_copy_constructible
+      <NoCopyableStack<Struct2<std::string>>>::value);
+  EXPECT_FALSE(std::is_copy_assignable
+      <NoCopyableStack<Struct2<std::string>>>::value);
+
+  EXPECT_FALSE(std::is_copy_constructible
+      <NoCopyableStack<Struct2<double>>>::value);
+  EXPECT_FALSE(std::is_copy_assignable
+      <NoCopyableStack<Struct2<double>>>::value);
 }
